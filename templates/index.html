@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Welcome, {{ name }}!</h1>
+    <p>Current time: {{ current_time }}</p>
+
+    {% if user_info %}
+    <h2>User Information:</h2>
+    <ul>
+        {% for key, value in user_info.items() %}
+        <li>{{ key }}: {{ value }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <h2>Flask Logo</h2>
+    <img src="{{ url_for('static', filename='images/flask_logo.png') }}" alt="Flask Logo">
+
+    <p><a href="{{ url_for('form') }}">Go to Form</a></p>
+    <p><a href="{{ url_for('all_users') }}">View all users</a></p>
+    <p><a href="{{ url_for('update_country') }}">Update a user's country</a></p>
+</body>
+</html>

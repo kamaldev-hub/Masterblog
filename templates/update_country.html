@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Country</title>
+</head>
+<body>
+    <h1>Update User's Country</h1>
+    <form method="POST" action="{{ url_for('update_country') }}">
+        <label for="name">Name:</label><br>
+        <input type="text" id="name" name="name" required><br>
+        <label for="country">Country:</label><br>
+        <input type="text" id="country" name="country" required><br>
+        <input type="submit" value="Update">
+    </form>
+    <p><a href="{{ url_for('all_users') }}">View all users</a></p>
+</body>
+</html>
