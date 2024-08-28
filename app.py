@@ -1,49 +1,88 @@
 from flask import Flask, render_template, request, redirect, url_for
-from datetime import datetime
+import json
 
 app = Flask(__name__)
 
-users = {
-    'Alice': {'age': 25, 'country': 'USA'},
-    'Bob': {'age': 30, 'country': 'UK'},
-    'Charlie': {'age': 35, 'country': 'Australia'}
-}
+
+def get_blog_posts():
+    with open('blog_posts.json', 'r') as file:
+        return json.load(file)
+
+
+def save_blog_posts(posts):
+    with open('blog_posts.json', 'w') as file:
+        json.dump(posts, file, indent=2)
+
+
+def fetch_post_by_id(post_id):
+    posts = get_blog_posts()
+    for post in posts:
+        if post['id'] == post_id:
+            return post
+    return None
 
 
 @app.route('/')
 def index():
-    name = request.args.get('name', 'Guest')
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    user_info = users.get(name, {})
-    return render_template('index.html', name=name, current_time=current_time, user_info=user_info)
+    blog_posts = get_blog_posts()
+    return render_template('index.html', posts=blog_posts)
 
 
-@app.route('/form')
-def form():
-    return render_template('form.html')
-
-
-@app.route('/all-users')
-def all_users():
-    return render_template('all_users.html', users=users)
-
-
-@app.route('/update-country', methods=['GET', 'POST'])
-def update_country():
+@app.route('/add', methods=['GET', 'POST'])
+def add():
     if request.method == 'POST':
-        name = request.form['name']
-        country = request.form['country']
-        if name in users:
-            users[name]['country'] = country
-            return redirect(url_for('all_users'))
-        else:
-            return f"User {name} not found.", 404
-    return render_template('update_country.html')
+        blog_posts = get_blog_posts()
+        new_id = max(post['id'] for post in blog_posts) + 1 if blog_posts else 1
+        new_post = {
+            'id': new_id,
+            'title': request.form.get('title'),
+            'author': request.form.get('author'),
+            'content': request.form.get('content'),
+            'likes': 0  # Initialize likes to 0
+        }
+        blog_posts.append(new_post)
+        save_blog_posts(blog_posts)
+        return redirect(url_for('index'))
+    return render_template('add.html')
 
 
-@app.errorhandler(404)
-def page_not_found(error):
-    return render_template('404.html'), 404
+@app.route('/delete/<int:post_id>')
+def delete(post_id):
+    blog_posts = get_blog_posts()
+    blog_posts = [post for post in blog_posts if post['id'] != post_id]
+    save_blog_posts(blog_posts)
+    return redirect(url_for('index'))
+
+
+@app.route('/update/<int:post_id>', methods=['GET', 'POST'])
+def update(post_id):
+    post = fetch_post_by_id(post_id)
+    if post is None:
+        return "Post not found", 404
+
+    if request.method == 'POST':
+        blog_posts = get_blog_posts()
+        for p in blog_posts:
+            if p['id'] == post_id:
+                p['title'] = request.form.get('title')
+                p['author'] = request.form.get('author')
+                p['content'] = request.form.get('content')
+                break
+        save_blog_posts(blog_posts)
+        return redirect(url_for('index'))
+
+    return render_template('update.html', post=post)
+
+
+@app.route('/like/<int:post_id>')
+def like(post_id):
+    blog_posts = get_blog_posts()
+    for post in blog_posts:
+        if post['id'] == post_id:
+            post['likes'] = post.get('likes', 0) + 1
+            break
+    save_blog_posts(blog_posts)
+    return redirect(url_for('index'))
 
 
 if __name__ == '__main__':
